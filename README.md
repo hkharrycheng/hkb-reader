@@ -51,7 +51,7 @@ news-sources.json          │
 - `t3[]` 每筆有 `kind`（`knowledge` 科普 / `article` 相關文章）、`media[]`（來源品牌）、`auts[]`（去職銜作者），前端 facet 與詳情頁靠這三個欄位。
 - `news-cache.json`：`{feed, feedUrl, sources[{name,type,url,count,title,updated}], feedUpdated, generated, count, items[{title,link,date,time,summary,img,imgSrc,cat,src}]}`；`src` 是來源名（對應 `sources[].name`）。
 - `news-sources.json`：`[{name,type,url}]`，由 `sync_news_sources.py` 從 News Feed List（`tblHXtZC4Dc0RpEQ` / view `vewFb7ZCho`）抽出 **Job ID link 指向 J16（`reczz28WRDTbyYuH`）** 的所有記錄；`type` 為 `RSS`／`Webpage`／`Youtube`（Youtube 會跳過）。**用戶在表裡加新來源後，重跑 `sync_news_sources.py` + `build_news.py` 即生效**，不需改程式。
-- Webpage 類來源（例如博客作者頁）只抽同網域的文章連結（標題＋連結，無日期／摘要／縮圖），會排在「日期未標示」分區。
+- Webpage 類來源（例如博客作者頁）先按「文章卡片」切塊解析：標題（`<h3>`）＋作者列的日期（時鐘圖標後的 `YYYY-MM-DD`）＋摘要（`<div class="des">`）＋縮圖（第一張 `<img>`，走 `cache_image()`）。卡片切不出來才回退到純連結掃描（該情況無日期，歸「日期未標示」）。
 - 圖片一律本地化：Base 附件圖放 `images/<file_token>.jpg`（17 張，已壓縮），新聞縮圖放 `news-img/<md5>.jpg`（長邊 480、quality 78）。
   **新聞原圖有防外連，直接引用 URL 在瀏覽器會載不出來，所以一定要用本地副本。**
 
@@ -123,6 +123,6 @@ python build_news.py    # 需外網；按 news-sources.json 抓 RSS／網頁來�
 - Prototype 只在 localhost 驗證，未部署。
 - 圖片不能加 `loading="lazy"`：此環境下 lazy 圖在切 Tab 後不會載入（曾造成縮圖全空白），所以全部改成即時載入。
 - 資料瑕疵：1 個篇章（「蒙古近70%貿易靠中國…」）在 HKB 單元欄為空，前端顯示為「（未連結單元）／（未分類）」，原始資料未改。
-- 新聞 RSS 的 pubDate 只有日期，故時間一律顯示 `00:00`；Webpage 類來源沒有日期，卡片歸入「日期未標示」分區排在最後。
+- 新聞 RSS 的 pubDate 只有日期，故時間一律顯示 `00:00`；Webpage 類來源解析到作者列日期就以該日期分組（現時博客 15 條全部有日期），解析不到的才歸「日期未標示」。
 - 統計只列出有單元的 STREAM；若日後某 STREAM 有 DOCX 但無任何單元，仍不會出現在統計（設計如此）。
 - 新聞開新視窗靠 `target="_blank"` + `window.open()`；**在只支援單一檢視的殼（例如豆包的內建瀏覽器）仍可能把閱讀器取代**，那時可按上一頁返回，或在 Safari／Chrome 開啟本頁即可正常另開分頁。`window.open()` 被封鎖時會彈出「直接開啟／複製連結」選擇框。
