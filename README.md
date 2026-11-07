@@ -55,6 +55,14 @@ news-sources.json          │
 - 圖片一律本地化：Base 附件圖放 `images/<file_token>.jpg`（17 張，已壓縮），新聞縮圖放 `news-img/<md5>.jpg`（長邊 480、quality 78）。
   **新聞原圖有防外連，直接引用 URL 在瀏覽器會載不出來，所以一定要用本地副本。**
 
+## 線上部（GitHub Pages）
+
+- 網站：<https://hkharrycheng.github.io/hkb-reader/>
+- Repo（public）：<https://github.com/hkharrycheng/hkb-reader>
+- 部署方式：repo 根目錄就是網站根目錄，`main` 分支一有更新，GitHub Pages 自動重建（約 1 分鐘）。
+- 更新做法：改完本機檔案後，把 `index.html`、`hkb.json`、`news-cache.json`、`news-sources.json`（連同新增的 `images/`、`news-img/`）上傳到 repo 根目錄對應位置即可；`build_*.py`、`sync_news_sources.py`、`_raw/` 不需上傳（`_raw` 是本機工作檔，不進 repo）。
+- 不用 Cloudflare Pages：此知識庫屬公開內容，不需要私人存取控制。
+
 ## 執行（本機測試）
 
 最簡單：雙擊 `start-localhost.bat`（會起 server 並自動開瀏覽器）。

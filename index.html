@@ -1220,7 +1220,7 @@ function renderNews(){
   if(items.length>UI.newsLimit){
     h += '<button class="loadmore" id="nmore">載入更多（尚有 '+(items.length-UI.newsLimit)+' 條）</button>';
   }
-  h += '<div class="foot">新聞來源與飛書「News Feed List」中 Job ID → J16 的記錄同步（RSS 全抓、網頁來源取文章標題與連結）· 本地縮圖在 news-img/</div>';
+  h += '<div class="foot">新聞來源與飛書「News Feed List」中 Job ID → J16 的記錄同步（RSS 全抓、網頁來源取標題／日期／摘要／縮圖）· 本地縮圖在 news-img/</div>';
   el.innerHTML = h;
   bindNews();
 }

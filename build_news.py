@@ -186,12 +186,64 @@ def rss_items(src):
 
 
 def page_items(src):
-    """Webpage 來源：抽同網域的文章連結（標題＝連結文字）。"""
+    """Webpage 來源：抽同網域的文章連結（標題／日期／摘要／縮圖）。
+    優先用「卡片區塊」解析（master-insight 的 row r2-box：圖＋<h3>標題＋作者+日期＋摘要），
+    區塊解析失敗才回退到純連結掃描（此時沒有日期）。"""
     page_url = src["url"]
     host = urllib.parse.urlparse(page_url).netloc
     data, charset = get_bytes(page_url)
     text = decode(data, charset)
+
+    CARD_RE = re.compile(r'<div class="row r2-box[^"]*"', re.I)
+    DATE_IN_AUTHOR = re.compile(r"fa-clock[^>]*>\s*</i>\s*([0-9]{4}-[0-9]{2}-[0-9]{2})")
+    DATE_ANY = re.compile(r"([0-9]{4}-[0-9]{2}-[0-9]{2})")
+
+    chunks = CARD_RE.split(text)
     out, seen = [], set()
+    if len(chunks) > 1:
+        for blk in chunks[1:]:
+            m_url = re.search(r'href="([^"]+)"', blk)
+            m_h3 = re.search(r"<h3[^>]*>(.*?)</h3>", blk, re.S)
+            if not (m_url and m_h3):
+                continue
+            href = urllib.parse.urljoin(page_url, m_url.group(1))
+            if urllib.parse.urlparse(href).netloc != host:
+                continue
+            title = WS_RE.sub(" ", clean_text(m_h3.group(1))).strip()
+            if len(title) < 6:
+                continue
+            if any(w in title for w in SKIP_WORDS):
+                continue
+            if href in seen or href.rstrip("/") == page_url.rstrip("/"):
+                continue
+            seen.add(href)
+            m_d = DATE_IN_AUTHOR.search(blk) or DATE_ANY.search(blk)
+            d = m_d.group(1) if m_d else ""
+            m_des = re.search(r'<div class="des">(.*?)</div>', blk, re.S)
+            summary = clean_text(m_des.group(1))[:260] if m_des else ""
+            m_img = re.search(r'<img[^>]+src="([^"]+)"', blk, re.I)
+            raw_img = m_img.group(1) if m_img else ""
+            if raw_img.startswith("/"):
+                raw_img = urllib.parse.urljoin(page_url, raw_img)
+            if raw_img and not raw_img.startswith("http"):
+                raw_img = ""
+            img, img_src = cache_image(raw_img, referer=page_url)
+            out.append({
+                "title": title,
+                "link": href,
+                "date": d,
+                "time": "",
+                "summary": summary,
+                "img": img,
+                "imgSrc": img_src,
+                "cat": src.get("tag", ""),
+                "src": src["name"],
+            })
+            if len(out) >= PER_WEB:
+                break
+        if out:
+            return out, src["name"], ""
+
     for m in A_RE.finditer(text):
         href, inner = m.group(1), m.group(2)
         href = urllib.parse.urljoin(page_url, href)
