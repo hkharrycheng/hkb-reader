@@ -11,7 +11,7 @@ import json, os, sys, datetime, re
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 RAW = os.path.join(BASE_DIR, "_raw")
 OUT = os.path.join(BASE_DIR, "hkb.json")
-VERSION = "2026.1.06"
+VERSION = "2026.1.07"
 
 FOLDER_ORDER = [
     "Academics and Workplace", "Business and Economics", "Computer Science",
