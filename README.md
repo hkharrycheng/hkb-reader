@@ -93,6 +93,14 @@ python build_news.py           # 需外網；按 news-sources.json 抓 RSS／網
 
 改完 `index.html` 建議先驗 JS 語法（抽出 `<script>` 再 `node --check`）。
 
+## 圖片上載規則（2026-11-09 定案）
+
+- 任何圖檔上載到 repo／GitHub Pages 前，單檔 **> 500 KB** 必須先壓到 **< 500 KB**：JPEG 逐級降 quality 88→50（`optimize`＋progressive）；PNG 轉 256→64 色調色板（必要時先降 scale）；**保持原檔名副檔名**，令 `images/<token>.<ext>` 引用不變。
+- **GIF 例外**：重壓會令檔案變大，5 個 >500 KB 的 GIF 保留原檔（`EEuzbAzWUoe0Rwx0mDOcdQjXnLb.gif` 690 KB｜`ONJ6bjoSBoEiPpxmhCacby7Ynlb.gif` 915 KB｜`RjABbL4wOoOIjRxnjj5cXxjenic.gif` 1257 KB｜`UnaZbiFijoPhzCxH8TEcPRb2nzg.gif` 1498 KB｜`WNvhb7HW7o1oBIxIyGkcZ1abn9e.gif` 834 KB）。
+- `images/` 現況：3,224 檔 / **460.5 MB**（壓縮前 725.7 MB，326 檔被壓）。壓縮腳本 `_regaudit\shrink_hkb.py`，抽驗 2 張最大圖文字仍清晰。
+- **Base 多維表格內的附件保留原圖**（用戶決定），壓縮版只用在 repo／部署端；因此 Base 仍有 343 個 ≥500 KB 附件，屬預期狀態。
+- 壓縮前的原圖留在 `_raw\images_bak_500kb\`（321 檔 / 335.1 MB），**不可用作上載來源**。
+
 ## 檔案
 
 | 檔案 | 說明 |
