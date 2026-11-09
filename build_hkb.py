@@ -11,7 +11,7 @@ import json, os, sys, datetime, re
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 RAW = os.path.join(BASE_DIR, "_raw")
 OUT = os.path.join(BASE_DIR, "hkb.json")
-VERSION = "2026.1.07"
+VERSION = "2026.1.08"
 
 FOLDER_ORDER = [
     "Academics and Workplace", "Business and Economics", "Computer Science",
@@ -48,6 +48,13 @@ def s(v):
     if isinstance(v, dict):
         return s(v.get("text") or v.get("name") or v.get("link") or "")
     return str(v)
+
+
+def norm_doc(name):
+    """學科名正規化：統一空白、去掉檔名式的「 - 」，令 Base 舊名／磁碟新名可以對上"""
+    t = re.sub(r"\s+", " ", str(name or "")).strip()
+    t = t.replace(" - ", " ")
+    return t.lower()
 
 
 def link_id(v):
@@ -168,8 +175,9 @@ def main():
         for r in rows:
             name = r.get("name") or ""
             folder = r.get("folder") or ""
-            if name and name not in docmap:
-                docmap[name] = {"folder": folder, "rel": r.get("rel") or ""}
+            key = norm_doc(name)
+            if key and key not in docmap:
+                docmap[key] = {"name": name, "folder": folder, "rel": r.get("rel") or ""}
 
     # ---------- t4 ----------
     t4 = []
@@ -236,8 +244,11 @@ def main():
     docs = {}
     units = []
     for r in units_raw:
-        doc = s(r.get("HKB Documentation"))
-        folder = docmap.get(doc, {}).get("folder") or UNSORTED
+        doc_raw = s(r.get("HKB Documentation"))
+        hit = docmap.get(norm_doc(doc_raw))
+        # 顯示用新名（磁碟 DOCX 檔名），唔再用 Base 可能殘留嘅舊名
+        doc = hit["name"] if hit else doc_raw
+        folder = (hit or {}).get("folder") or UNSORTED
         rec = {
             "id": r.get("record_id", ""),
             "t1": s(r.get("標題1")),
@@ -253,7 +264,7 @@ def main():
         if doc:
             d = docs.setdefault(doc, {
                 "doc": doc, "folder": folder, "units": 0, "t3": 0, "t4": 0, "last": "",
-                "rel": docmap.get(doc, {}).get("rel") or "",
+                "rel": (hit or {}).get("rel") or "",
             })
             d["units"] += 1
 
@@ -403,7 +414,7 @@ def main():
     # ---------- console report ----------
     print("units=%d t3=%d t4=%d links=%d docs=%d" % (len(units), len(t3), len(t4), len(links), len(docs)))
     print("docx files mapped=%d" % len(docmap))
-    missing = [d for d in docs if d not in docmap and d]
+    missing = [d for d in docs if norm_doc(d) not in docmap and d]
     print("HKB docs without local DOCX: %s" % (missing if missing else "none"))
     for f in folder_rows:
         print("  %-32s docx=%-4d units=%-3d t3=%-3d t4=%-3d last=%s" %

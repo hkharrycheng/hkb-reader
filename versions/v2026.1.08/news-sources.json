@@ -1,0 +1,14 @@
+[
+ {
+  "name": "政府新聞",
+  "type": "RSS",
+  "url": "https://www.news.gov.hk/tc/common/html/ticker.rss.xml",
+  "tag": "News"
+ },
+ {
+  "name": "博客",
+  "type": "Webpage",
+  "url": "https://www.master-insight.com/author/shiyongqing",
+  "tag": "Blogger"
+ }
+]
